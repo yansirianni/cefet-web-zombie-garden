@@ -1,0 +1,13 @@
+<p>Ha {{zombies.length}} zumbi(s) registrado(s) no jardim</p>
+{{#if zombies}}
+  <ul class="ball-list list-inline">
+    {{#each zombies}}
+      <li class="ball-item">
+          <a href="/zombies/{{id}}">
+            <img class="ball-image" src="images/{{pictureUrl}}">
+          </a>
+          <div class="ball-name">{{name}}</div>
+      </li>
+    {{/each}}
+  </ul>
+{{/if}}

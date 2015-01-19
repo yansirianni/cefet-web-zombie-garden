@@ -1,0 +1,39 @@
+body {
+  padding: 0 50px;
+}
+
+.list-inline > li.ball-item {
+  padding: 0 30px 40px;
+}
+
+.ball-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
+.ball-name {
+  text-align: center;
+}
+
+.media-object {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+}
+
+.media-object-vs {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+
+.property {
+  font-weight: bold;
+  color: white;
+}
+
+.zombie-details {
+  margin-bottom: 40px;
+}
