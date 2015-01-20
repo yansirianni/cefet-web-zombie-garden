@@ -37,3 +37,7 @@ body {
 .zombie-details {
   margin-bottom: 40px;
 }
+
+.form-rows .row {
+  margin-bottom: 1.5em;
+}
