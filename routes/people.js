@@ -44,32 +44,9 @@ router.get('/new/', function(req, res) {
 
 
 /* POST registra uma nova pessoa */
-router.post('/', function(req, res) {
-  var name = req.body.name;
-  db.query("INSERT INTO `zombies`.`person` (`id`, `name`, `alive`, `eatenBy`) VALUES (NULL, '" + name + "', 1, NULL);",
-    function(err, result) {
-      if (err || typeof result.insertId === 'undefined') {
-        req.flash('error', 'Nao foi possivel registrar nova pessoa.');
-        res.redirect('back');
-        return;
-      }
-
-      req.flash('success', 'Pessoa registrada! (id=' + result.insertId + ')');
-      res.redirect('/people/');
-    });
-});
+// IMPLEMENTAR AQUI
 
 /* DELETE uma pessoa */
-router.delete('/:id', function(req, res) {
-  db.query('DELETE FROM person WHERE id = ' + db.escape(req.params.id),
-    function(err, result) {
-      if (err) {
-        req.flash('error', 'Nao foi possivel excluir a pessoa.');
-      } else {
-        req.flash('success', 'Pessoa excluida.');
-      }
-      res.redirect('/people/');
-    });
-});
+// IMPLEMENTAR AQUI
 
 module.exports = router;
