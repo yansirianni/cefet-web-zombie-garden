@@ -2,6 +2,22 @@ body {
   padding: 0 50px;
 }
 
+.logo-type {
+  font-family: 'Lakki Reddy', cursive;
+}
+
+.logo-type > .primary-logo-color {
+  color: rgb(215, 150, 87);
+}
+
+.logo-type > .secondary-logo-color {
+  color: rgb(51, 247, 60);
+}
+
+.navbar-brand {
+  font-size: 34px;
+}
+
 .list-inline > li.ball-item {
   padding: 0 30px 40px;
 }
@@ -28,6 +44,13 @@ body {
   border-radius: 50%;
 }
 
+.zombie-mini-list li {
+  margin-bottom: .75em;
+}
+
+.dead {
+  text-decoration: line-through;
+}
 
 .property {
   font-weight: bold;
@@ -40,4 +63,33 @@ body {
 
 .form-rows .row {
   margin-bottom: 1.5em;
+}
+
+#statistics-title {
+  margin: 0;
+}
+
+#statistics-title + hr {
+  margin-top: 4px;
+}
+
+.statistics-count sup.label {
+  font-size: 50%;
+}
+
+.sliding-out {
+  position: relative;
+  animation: vanishing-down .5s ease-out 1.2s;
+  animation-fill-mode: forwards;
+  -webkit-animation: vanishing-down .5s ease-out 1.2s;
+  -webkit-animation-fill-mode: forwards;
+}
+
+@keyframes vanishing-down {
+  from { left: 0; opacity: 1; }
+  to   { left: 30px; opacity: 0; }
+}
+@-webkit-keyframes vanishing-down {
+  from { left: 0; opacity: 1; }
+  to   { left: 30px; opacity: 0; }
 }

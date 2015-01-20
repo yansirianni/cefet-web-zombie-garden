@@ -12,13 +12,10 @@ router.get('/', function(req, res, next) {
     }, function(err, rows) {
       if (err) res.status(500).send('Problema ao recuperar pessoas.');
 
-      res.format({
-        html: function() {
-          res.render('listPeople', { people: rows });
-        },
-        json: function() {
-          res.json({ people: rows });
-        }
+      res.render('listPeople', {
+        people: rows,
+        success: req.flash('success'),
+        error: req.flash('error')
       });
   });
 });
@@ -30,10 +27,49 @@ router.put('/eaten/', function(req, res) {
            'SET alive = false, eatenBy = ' + db.escape(req.body.zombie) + ' ' +
            'WHERE id = ' + db.escape(req.body.person),
     function(err, result) {
-      req.flash('success', 'A pessoa foi inteiramente (nao apenas cerebro) engolida.');
+      if (result.affectedRows !== 1) {
+        req.flash('error', 'Nao ha pessoa para ser comida');
+      } else {
+        req.flash('success', 'A pessoa foi inteiramente (nao apenas cerebro) engolida.');
+      }
       res.redirect('/');
   });
 });
 
+
+/* GET formulario de registro de nova pessoa */
+router.get('/new/', function(req, res) {
+  res.render('newPerson');
+});
+
+
+/* POST registra uma nova pessoa */
+router.post('/', function(req, res) {
+  var name = req.body.name;
+  db.query("INSERT INTO `zombies`.`person` (`id`, `name`, `alive`, `eatenBy`) VALUES (NULL, '" + name + "', 1, NULL);",
+    function(err, result) {
+      if (err || typeof result.insertId === 'undefined') {
+        req.flash('error', 'Nao foi possivel registrar nova pessoa.');
+        res.redirect('back');
+        return;
+      }
+
+      req.flash('success', 'Pessoa registrada! (id=' + result.insertId + ')');
+      res.redirect('/people/');
+    });
+});
+
+/* DELETE uma pessoa */
+router.delete('/:id', function(req, res) {
+  db.query('DELETE FROM person WHERE id = ' + db.escape(req.params.id),
+    function(err, result) {
+      if (err) {
+        req.flash('error', 'Nao foi possivel excluir a pessoa.');
+      } else {
+        req.flash('success', 'Pessoa excluida.');
+      }
+      res.redirect('/people/');
+    });
+});
 
 module.exports = router;

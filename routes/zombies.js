@@ -32,6 +32,7 @@ router.get('/:id', function(req, res) {
         res.format({
           html: function() {
             if (rows.length > 0) {
+              rows[0].zombie.born = require('../util').getReadableDateString(rows[0].zombie.born);
               res.render('detailsZombie', { zombie: rows[0] });
             } else {
               res.status(404).send('Zumbi nao encontrado. Tente novamente de noite.');
@@ -62,7 +63,7 @@ router.post('/brains', function(req, res) {
         return;
       }
       if (typeof result[0] === 'undefined') {
-        req.flash('error', 'Zumbi nao encontrado!');
+        req.flash('error', 'Pessoa nao encontrada!');
         res.redirect('/');
         return;
       }
@@ -70,7 +71,7 @@ router.post('/brains', function(req, res) {
       var previousName = result[0].name;
       var firstName = previousName.split(' ')[0];
       var newName = ['a','e','i','o','u','w','y'].indexOf(firstName.substring(0,1).toLowerCase()) === 0 ? ('Z' + firstName.toLowerCase()) : ('Z' + firstName.substring(1).toLowerCase());
-      var born = new Date();
+      var born = require('../util').getMySQLDate(new Date());
       var picIndex = Math.floor((Math.random() * (20-7))) + 7;
       var biterId = req.body.zombie;
       db.query("INSERT INTO `zombies`.`zombie` (`id`, `name`, `born`, `previousName`, `pictureUrl`, `bittenBy`) VALUES (NULL, '" + newName + "', '" + born + "', '" + previousName + "', 'zombie" + picIndex + ".jpg', " + biterId + ");",
@@ -87,6 +88,8 @@ router.post('/brains', function(req, res) {
                 return;
               }
 
+              req.flash('peopleCountChange', '-1');
+              req.flash('zombieCountChange', '+1');
               req.flash('success', 'Um novo zumbi se mudou para o jardim: ' + newName);
               res.redirect('/');
             });
