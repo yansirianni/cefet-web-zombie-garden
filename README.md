@@ -166,7 +166,7 @@ faça sua primeira visita ao Jardim Zumbi.
 - **Pergunta**: Estou no arquivo `routes/people.js` e criei uma rota
   de `POST` para `/people`. Mas quando eu envio o formulário para cadastro de
   nova pessoa, estou recebendo mensagem de erro 404 (rota inexistente).
-  #comofaz?
+  Como faz?
   - **Resposta rapidinha**: crie a rota para a URL `/` em vez de `/people`
   - **Resposta bacana**: para aplicações mais grandinhas em Express.js, convém
     deixar o código da aplicação bem organizado e dividido em vários arquivos.
