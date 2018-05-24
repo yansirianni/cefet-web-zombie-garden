@@ -1,10 +1,9 @@
-var express = require('express');
-var db = require('../db');
-
-var router = express.Router();
+const express = require('express');
+const db = require('../db');
+const router = express.Router();
 
 /* GET lista de pessoas. */
-router.get('/', function(req, res, next) {
+router.get('/', (req, res, next) => {
 
   db.query({
     sql: 'SELECT * FROM person LEFT OUTER JOIN zombie ON eatenBy = zombie.id',
@@ -12,7 +11,7 @@ router.get('/', function(req, res, next) {
     // nas quais fizemos JOIN (neste caso, `person` e `zombie`).
     // descrição: https://github.com/felixge/node-mysql#joins-with-overlapping-column-names
     nestTables: true
-    }, function(err, rows) {
+  }, (err, rows) => {
       if (err) {
         res.status(500)
           .send('Problema ao recuperar pessoas. Descrição: ' + err);
@@ -35,11 +34,11 @@ router.get('/', function(req, res, next) {
 
 
 /* PUT altera pessoa para morta por um certo zumbi */
-router.put('/eaten/', function(req, res) {
+router.put('/eaten/', (req, res) => {
   db.query('UPDATE person ' +
            'SET alive = false, eatenBy = ' + db.escape(req.body.zombie) + ' ' +
            'WHERE id = ' + db.escape(req.body.person),
-    function(err, result) {
+    (err, result) => {
       if (err) {
         req.flash('error', 'Erro desconhecido. Descrição: ' + err);
       } else if (result.affectedRows !== 1) {
@@ -53,17 +52,17 @@ router.put('/eaten/', function(req, res) {
 
 
 /* GET formulario de registro de nova pessoa */
-router.get('/new/', function(req, res) {
+router.get('/new/', (req, res) => {
   res.render('newPerson');
 });
 
 
 /* POST registra uma nova pessoa */
-router.post('/', function(req, res) {
-  var name = req.body.name;
+router.post('/', (req, res) => {
+  const name = req.body.name;
   db.query('INSERT INTO person (`name`)' +
            'VALUES (\'' + name + '\');',
-    function(err, result) {
+    (err, result) => {
       if (err || typeof result.insertId === 'undefined') {
         req.flash('error', 'Não foi possível registrar nova pessoa.');
         res.redirect('back');
@@ -76,9 +75,9 @@ router.post('/', function(req, res) {
 });
 
 /* DELETE uma pessoa */
-router.delete('/:id', function(req, res) {
+router.delete('/:id', (req, res) => {
   db.query('DELETE FROM person WHERE id = ' + db.escape(req.params.id),
-    function(err, result) {
+    (err, result) => {
       if (err) {
         req.flash('error', 'Não foi possível excluir a pessoa.');
       } else {

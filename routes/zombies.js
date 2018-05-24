@@ -1,11 +1,12 @@
-var express = require('express');
-var router = express.Router();
-var db = require('../db');
+const express = require('express');
+const router = express.Router();
+const db = require('../db');
 
 /* GET lista de zumbis. */
-router.get('/', function(req, res, next) {
+router.get('/', (req, res, next) => {
 
   db.query('SELECT * FROM zombie', function(err, rows) {
+    // negociação de conteúdo
     res.format({
       html: function() {
         res.render('listZombies', { zombies: rows });
@@ -18,7 +19,7 @@ router.get('/', function(req, res, next) {
 });
 
 /* GET detalhes de um zumbi. */
-router.get('/:id', function(req, res) {
+router.get('/:id', (req, res) => {
     db.query({
       sql: 'SELECT * ' +
            'FROM zombie ' +
@@ -26,13 +27,18 @@ router.get('/:id', function(req, res) {
              'ON zombie.bittenBy = biter.id ' +
            'WHERE zombie.id = ' + db.escape(req.params.id),
       nestTables: true
-    }, function(err, rows) {
-        if (err) res.status(500).send('Erro desconhecido: ' + err);
+    }, (err, rows) => {
+        if (err) {
+          res.status(500).send('Erro desconhecido: ' + err);
+        }
 
+        // negociação de conteúdo: responde em HTML (ie, renderiza a view) se
+        // a requisição tem o cabeçalho "Accepts: text/html", ou em JSON se
+        // "Accepts: application/json"
         res.format({
           html: function() {
             if (rows.length > 0) {
-              rows[0].zombie.born = require('../util').getReadableDateString(rows[0].zombie.born);
+              rows[0].zombie.born = require('../dbUtils').getReadableDateString(rows[0].zombie.born);
               res.render('detailsZombie', { zombie: rows[0] });
             } else {
               res.status(404).send('Zumbi nao encontrado. Tente novamente de noite.');
@@ -51,13 +57,13 @@ router.get('/:id', function(req, res) {
 
 
 /* POST cria um novo zumbi a partir de uma pessoa */
-router.post('/brains', function(req, res) {
+router.post('/brains', (req, res) => {
   // busca nome da pessoa mordiscada
   // criar um novo zumbi com nome similar ao da pessoa
   // e excluir a pessoa
 
   db.query('SELECT name FROM person WHERE id = ' + db.escape(req.body.person),
-    function(err, result) {
+    (err, result) => {
       if (err) {
         res.status(500).send('Erro ao mordiscar. Talvez estivesse estragado.');
         return;
@@ -68,21 +74,21 @@ router.post('/brains', function(req, res) {
         return;
       }
 
-      var previousName = result[0].name;
-      var firstName = previousName.split(' ')[0];
-      var newName = ['a','e','i','o','u','w','y'].indexOf(firstName.substring(0,1).toLowerCase()) === 0 ? ('Z' + firstName.toLowerCase()) : ('Z' + firstName.substring(1).toLowerCase());
-      var born = require('../util').getMySQLDate(new Date());
-      var picIndex = Math.floor((Math.random() * (20-7))) + 7;
-      var biterId = req.body.zombie;
+      const previousName = result[0].name;
+      const firstName = previousName.split(' ')[0];
+      const newName = ['a','e','i','o','u','w','y'].indexOf(firstName.substring(0,1).toLowerCase()) === 0 ? ('Z' + firstName.toLowerCase()) : ('Z' + firstName.substring(1).toLowerCase());
+      const born = require('../dbUtils').getMySQLDate(new Date());
+      const picIndex = Math.floor((Math.random() * (20-7))) + 7;
+      const biterId = req.body.zombie;
       db.query("INSERT INTO `zombies`.`zombie` (`id`, `name`, `born`, `previousName`, `pictureUrl`, `bittenBy`) VALUES (NULL, '" + newName + "', '" + born + "', '" + previousName + "', 'zombie" + picIndex + ".jpg', " + biterId + ");",
-        function(err, result) {
+        (err, result) => {
           if (err) {
             res.status(500).send('Erro ao mordiscar. Talvez estivesse estragado.');
             return;
           }
 
           db.query('DELETE FROM zombies.person WHERE id = ' + req.body.person,
-            function(err, result) {
+            (err, result) => {
               if (err) {
                 res.status(500).send('Erro ao mordiscar. Talvez estivesse estragado.');
                 return;
