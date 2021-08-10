@@ -80,8 +80,8 @@ router.post('/brains', async (req, res, next) => {
   // busca nome da pessoa mordiscada
   // criar um novo zumbi com nome similar ao da pessoa
   // e excluir a pessoa
+  const transaction = await db.getConnection()
   try {
-
     const [person] = await db.execute('SELECT name FROM person WHERE id=?', [personId])
 
     if (!person || person.length < 1) {
@@ -96,9 +96,8 @@ router.post('/brains', async (req, res, next) => {
     const picIndex = getPictureIndex()
     const biterId = req.body.zombie
 
-    const connection = await db.getConnection()
-    await connection.beginTransaction()
-    const [insertResult] = await connection.execute(
+    await transaction.beginTransaction()
+    const [insertResult] = await transaction.execute(
       `INSERT INTO zombie (id, name, born, previousName, pictureUrl, bittenBy)
        VALUES (NULL, ?, ?, ?, ?, ?)`,
       [newName, born, previousName, `zombie${picIndex}.jpg`, biterId]
@@ -108,7 +107,7 @@ router.post('/brains', async (req, res, next) => {
       throw new Error(`Não inseriu um novo zumbi na tabela graças à pessoa com id ${personId}`)
     }
 
-    const [deleteResult] = await connection.execute(
+    const [deleteResult] = await transaction.execute(
       `DELETE
        FROM person
        WHERE id=?`,
@@ -118,8 +117,7 @@ router.post('/brains', async (req, res, next) => {
     if (!deleteResult || deleteResult.affectedRows < 1) {
       throw new Error(`Não excluiu a pessoa com id ${personId}`)
     }
-    await connection.commit()
-    connection.release()
+    await transaction.commit()
 
     res.format({
       html: () => {
@@ -133,8 +131,8 @@ router.post('/brains', async (req, res, next) => {
 
   } catch (error) {
     try {
-      if (connection) {
-        await connection.rollback()
+      if (transaction) {
+        await transaction.rollback()
       }
     } catch (transactionError) {
       // just ignore
@@ -142,6 +140,8 @@ router.post('/brains', async (req, res, next) => {
     console.error(error)
     error.friendlyMessage = 'Erro ao mordiscar. Talvez estivesse estragado'
     next(error)
+  } finally {
+    transaction.release()
   }
   
 })

@@ -16,7 +16,9 @@ router.get('/', async (req, res, next) => {
       nestTables: true
     })
 
-
+    
+    // Exercício 3: negociação de conteúdo para esta resposta
+    //
     // renderiza a view de listagem de pessoas, passando como contexto
     // de dados:
     // - people: com um array de `person`s do banco de dados
@@ -80,57 +82,21 @@ router.get('/new/', (req, res) => {
 
 
 /* POST registra uma nova pessoa */
-router.post('/', async (req, res) => {
-  const name = req.body.name
-  try {
-    const [result] = await db.execute(`INSERT INTO person (name)
-                                       VALUES (?)`,
-                                      [name])
-    console.log(result)
-    if (!result.insertId) {
-      throw new Error()
-    }
-    
-    req.flash('success', `Pessoa registrada! (com id=${result.insertId})`)
-    res.redirect('/people/')
-    
-  } catch (error) {
-    console.log('error', error)
-    error.friendlyMessage = 'Não foi possível registrar nova pessoa'
-    req.flash('error', error.friendlyMessage)
-    res.redirect('back')
-  
-  }
-})
+// Exercício 1: IMPLEMENTAR AQUI
+// Dentro da callback de tratamento da rota:
+//   1. Fazer a query de INSERT no banco
+//   2. Redirecionar para a rota de listagem de pessoas
+//      - Em caso de sucesso do INSERT, colocar uma mensagem feliz
+//      - Em caso de erro do INSERT, colocar mensagem vermelhinha
+
 
 /* DELETE uma pessoa */
-router.delete('/:id', async (req, res) => {
-  const personId = req.params.id
-  if (!personId) {
-    req.flash('error', 'Nenhum id de pessoa foi passado!')
-    res.redirect('back')
-    return;
-  }
-
-  try {
-    const [result] = await db.execute('DELETE FROM person WHERE id=?',
-                                      [personId])
-
-    if (!result.affectedRows || result.affectedRows === 0) {
-      throw new Error()
-    }
-
-    req.flash('success', 'Pessoa excluída.')
-
-  } catch (error) {
-    console.error(error)
-    req.flash('error', 'Não foi possível excluir a pessoa.')
-
-  } finally {
-    res.redirect('/people/')
-
-  }
-})
+// Exercício 2: IMPLEMENTAR AQUI
+// Dentro da callback de tratamento da rota:
+//   1. Fazer a query de DELETE no banco
+//   2. Redirecionar para a rota de listagem de pessoas
+//      - Em caso de sucesso do INSERT, colocar uma mensagem feliz
+//      - Em caso de erro do INSERT, colocar mensagem vermelhinha
 
 
 export default router
