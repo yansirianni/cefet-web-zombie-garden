@@ -1,20 +1,24 @@
 {
   "name": "zombie-garden",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A regular day in the zombie garden",
   "private": true,
+  "main": "bin/www.js",
   "scripts": {
-    "start": "nodemon ./bin/www"
+    "start": "nodemon ./bin/www",
+    
+    "build-db": "sudo docker build -t zombies-db .",
+    "start-db": "sudo docker run -d -p 3306:3306 zombies-db > .zombies-db-cid",
+    "stop-db": "sudo docker stop `cat .zombies-db-cid`"
   },
   "dependencies": {
-    "body-parser": "~1.18.3",
     "connect-flash": "^0.1.1",
-    "debug": "~3.1.0",
-    "express": "~4.16.3",
-    "express-session": "^1.15.6",
-    "hbs": "~4.0.1",
-    "method-override": "^2.3.10",
-    "morgan": "~1.9.0",
-    "serve-favicon": "~2.5.0"
-  }
+    "express": "~4.17.1",
+    "express-session": "^1.17.2",
+    "hbs": "~4.1.2",
+    "method-override": "^3.0.0",
+    "morgan": "~1.10.0",
+    "mysql2": "^2.3.0"
+  },
+  "type": "module"
 }

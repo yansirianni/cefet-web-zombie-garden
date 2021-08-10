@@ -1,72 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
   <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
     <title>Zombie Garden</title>
-    <link rel='stylesheet' href='/stylesheets/bootstrap.min.css' />
-    <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Lakki+Reddy'>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" href="/css/vendor/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <link rel="icon" href="/img/zombie1.jpg">
   </head>
-  <body>
-    <nav class="navbar navbar-default">
-      <div class="container-fluid">
-
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-            <span class="sr-only">Mostra navegacao</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand logo-type" href="/"><span class="primary-logo-color">Zombie</span> <span class="secondary-logo-color">Garden</span></a>
-        </div>
-
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="/">Home <span class="sr-only">(atual)</span></a></li>
-            <li class="dropdown">
-              <a href="/zombies" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-                Zumbis <span class="caret"></span>
-              </a>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="/zombies">Listagem</a></li>
-              </ul>
-            </li>
-            <li class="dropdown">
-              <a href="/people" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-                Pessoas <span class="caret"></span>
-              </a>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="/people">Listagem</a></li>
-                <li><a href="/people/new">Nova pessoa...</a></li>
-              </ul>
-            </li>
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="/db/reset">Reset do banco</a></li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+  <body class="bg-dark">
+    {{> header}}
 
 
-    {{#if success}}
-      <div class="alert alert-success alert-dismissible fade in" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <strong>Sucesso!</strong> {{success}}
-      </div>
-    {{/if}}
-    {{#if error}}
-      <div class="alert alert-danger alert-dismissible fade in" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <strong>Erro!</strong> {{error}}
-      </div>
-    {{/if}}
+    <section id="notifications" class="toast-container position-absolute start-50 translate-middle-x">
+      {{#if success}}
+        {{> notification isSucess=true title="Sucesso!" message=success}}
+      {{/if}}
+      {{#if error}}
+        {{> notification isSucess=false title="Erro!" message=error}}
+      {{/if}}
+    </section>
 
-    {{{body}}}
-    <script src="/javascripts/jquery-2.1.3.min.js"></script>
-    <script src="/javascripts/bootstrap.min.js"></script>
-    <script src="/javascripts/main.js"></script>
+    <main>
+      {{{body}}}
+    </main>
+
+    <script src="/js/vendor/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
   </body>
 </html>

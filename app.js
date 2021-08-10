@@ -1,86 +1,99 @@
-const express = require('express');
-const path = require('path');
-const favicon = require('serve-favicon');
-const logger = require('morgan');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const bodyParser = require('body-parser');
-const methodOverride = require('method-override')
-const flash = require('connect-flash');
-const db = require('./db');
-const dbUtils = require('./dbUtils');
+// módulos da plataforma
+import path from 'path'
+
+// módulos npm
+import express from 'express'
+import hbs from 'hbs'
+import logger from 'morgan'
+import session from 'express-session'
+import methodOverride from 'method-override'
+import flash from 'connect-flash'
+
+
+// outros módulos da aplicação
+import { resetDb } from './db-utils.js'
+
 
 // a definição das rotas de cada "entidade" está isolada em seu próprio arquivo
 // de forma a tornar o código do projeto organizado
-const routes = require('./routes/index');
-const people = require('./routes/people');
-const zombies = require('./routes/zombies');
+import index from './routes/index.js'
+import people from './routes/people.js'
+import zombies from './routes/zombies.js'
 
 
-const app = express();
+
+const app = express()
+const __dirname = new URL('.', import.meta.url).pathname
 
 // configura a pasta que contém as views e o handlebars como templating engine
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
+app.set('views', `${__dirname}/views`)
+app.set('view engine', 'hbs')
+hbs.registerPartials(`${__dirname}/views/partials`, console.error)
+app.set('json spaces', 2);
 
 // possibilita enviar um DELETE via formulário,
 // quando é um POST com ?_method=DELETE na querystring
 //
 // isto é necessário porque formulários aceitam apenas GET e POST
-app.use(methodOverride('_method', { methods: ['GET', 'POST'] }));
-app.use(favicon(__dirname + '/public/images/zombie1.jpg'));
-app.use(logger('dev'));                                   // registra tudo no terminal
-app.use(bodyParser.json());                               // required pra POST, PUT, PATCH etc.
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(session({                                         // required para flash()
+app.use(methodOverride('_method', { methods: ['GET', 'POST'] }))
+app.use(logger('dev'))                                    // registra tudo no terminal
+app.use(express.json())                                   // necessário pra POST, PUT, PATCH etc.
+app.use(express.urlencoded({ extended: false }))
+app.use(session({                                         // necessário para flash()
   secret: 'lalala',
   resave: false,
   saveUninitialized: true
-}));
-app.use(flash());                                         // required para msgs efêmeras
-app.use(express.static(path.join(__dirname, 'public')));  // serve arquivos estáticos
+}))
+app.use(flash())                                          // necessário para msgs efêmeras
+app.use(express.static(path.join(__dirname, 'public')))   // serve arquivos estáticos
+
 
 // configura as rotas "de cada entidade" da aplicação (separadinho, organizado)
-app.use('/', routes);
-app.use('/people', people);
-app.use('/zombies', zombies);
-app.use('/db/reset', (req, res) => {
-  dbUtils.resetDb((error) => {
-      req.flash('error', errorMessage);
-    }, () => {
-      req.flash('success', 'Banco de dados restaurado ao estado original');
-      res.redirect('/');
-    });
-});
+app.use('/', index)
+app.use('/people', people)
+app.use('/zombies', zombies)
+app.use('/db/reset', async (req, res) => {
+  try {
+    await resetDb()
+    req.flash('success', 'Banco de dados restaurado ao estado original.')
+
+  } catch (error) {
+    req.flash('error', error.friendlyMessage ?? error.message)
+
+  } finally {
+    res.redirect('back')
+  }
+})
 
 // uma rota "catch-all" para erros de caminho inexistente
 app.use((req, res, next) => {
-    const err = new Error('Not Found');
-    err.status = 404;
-    next(err);
-});
+  const err = new Error('Not Found')
+  err.status = 404
+  next(err)
+})
 
 // handler de erros em ambientes de dev
 // imprime a stacktrace
 if (app.get('env') === 'development') {
-    app.use((err, req, res, next) => {
-        res.status(err.status || 500);
-        res.render('error', {
-            message: err.message,
-            error: err
-        });
-    });
+  app.use((err, req, res, next) => {
+    const message = err.friendlyMessage ? [err.friendlyMessage, err.message].join('. ') : err.message
+    res.status(err.status || 500)
+    res.render('error', {
+      message: message,
+      error: err
+    })
+  })
 }
 
 // handler de erros de ambiente de produção
 // não mostra a stack de erros pro usuário
 app.use((err, req, res, next) => {
-    res.status(err.status || 500);
-    res.render('error', {
-        message: err.message,
-        error: {}
-    });
-});
+  res.status(err.status || 500)
+  res.render('error', {
+    message: err.friendlyMessage ?? err.message,
+    error: {}
+  })
+})
 
 
-module.exports = app;
+export default app

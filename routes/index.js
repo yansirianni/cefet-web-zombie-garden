@@ -1,41 +1,52 @@
-const express = require('express');
-const router = express.Router();
-const db = require('../db');
+import express from 'express'
+import db from '../db.js'
+const router = express.Router()
+
 
 /* GET página inicial */
-router.get('/', (req, res, next) => {
-  // pega todas as pessoas do banco de dados
-  db.query('SELECT id, name, alive ' +
-           'FROM person',
-    (err, people) => {
-      if (err) {
-        res.status(500).send('Erro ao recuperar pessoas.');
-      }
+router.get('/', async (req, res, next) => {
+  try {
+    // pega todas as pessoas e zumbis do banco de dados
+    // duas formas: (1) em sequência, (2) em paralelo (melhor)
+    //
+    // (1) em sequência (ruim, pq é desnecessário esperar):
+    // const people = await db.execute(`SELECT id, name, alive
+    //                                  FROM person`)
+    // const zombies = await db.execute(`SELECT id, name, pictureUrl
+    //                                   FROM zombie`)
+    //
+    // (2) consultas feitas em paralelo ao banco:
+    const [
+      [people],
+      [zombies]
+    ] = await Promise.all([
+      db.execute(`SELECT id, name, alive
+                  FROM person`),
+      db.execute(`SELECT id, name, pictureUrl
+                  FROM zombie`)
+    ])
 
-      // pega todos os zumbis
-      db.query('SELECT id, name, pictureUrl ' +
-               'FROM zombie ',
-        (err, zombies) => {
-            if (err) {
-              res.status(500).send('Erro ao recuperar zumbis. Eles nao podem ser recuperados. Brains.');
-            }
 
-            // renderiza a view index
-            res.render('index', {
-              zombies: zombies,
-              people: people,
+    // renderiza a view index
+    res.render('index', {
+      zombies,
+      people,
 
-              // req.flash é uma forma de comunicar algo efêmero à view
-              // (tipo uma mensagem de sucesso/erro após uma operação)...
-              // o método .flash é injetado em req graças ao pacote
-              // connect-flash (veja o package.json)
-              success: req.flash('success'),
-              error: req.flash('error'),
-              peopleCountChange: req.flash('peopleCountChange'),
-              zombieCountChange: req.flash('zombieCountChange')
-            });
-        });
-    });
-});
+      // req.flash é uma forma de comunicar algo efêmero à view
+      // (tipo uma mensagem de sucesso/erro após uma operação)...
+      // o método .flash é injetado em req graças ao pacote
+      // connect-flash (veja o package.json)
+      success: req.flash('success'),
+      error: req.flash('error'),
+      peopleCountChange: req.flash('peopleCountChange'),
+      zombieCountChange: req.flash('zombieCountChange')
+    })
 
-module.exports = router;
+  } catch (error) {
+    console.error(error)
+    error.friendlyMessage = 'Erro ao recuperar pessoas ou zumbis. Eles não podem ser recuperados... brains'
+    next(error)
+  }
+})
+
+export default router

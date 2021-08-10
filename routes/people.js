@@ -1,91 +1,136 @@
-const express = require('express');
-const db = require('../db');
-const router = express.Router();
+import express from 'express'
+import db from'../db.js'
+const router = express.Router()
+
 
 /* GET lista de pessoas. */
-router.get('/', (req, res, next) => {
+router.get('/', async (req, res, next) => {
 
-  db.query({
-    sql: 'SELECT * FROM person LEFT OUTER JOIN zombie ON eatenBy = zombie.id',
-    // nestTables resolve conflitos de haver campos com mesmo nome nas tabelas
-    // nas quais fizemos JOIN (neste caso, `person` e `zombie`).
-    // descrição: https://github.com/felixge/node-mysql#joins-with-overlapping-column-names
-    nestTables: true
-  }, (err, rows) => {
-      if (err) {
-        res.status(500)
-          .send('Problema ao recuperar pessoas. Descrição: ' + err);
-      }
+  try {
+    const [people] = await db.execute({
+      sql: 'SELECT * FROM person LEFT OUTER JOIN zombie ON eatenBy = zombie.id',
+  
+      // nestTables resolve conflitos de haver campos com mesmo nome nas tabelas
+      // nas quais fizemos JOIN (neste caso, `person` e `zombie`).
+      // descrição: https://github.com/felixge/node-mysql#joins-with-overlapping-column-names
+      nestTables: true
+    })
 
-      // renderiza a view de listagem de pessoas, passando como contexto
-      // de dados:
-      // - people: com um array de `person`s do banco de dados
-      // - success: com uma mensagem de sucesso, caso ela exista
-      //   - por exemplo, assim que uma pessoa é excluída, uma mensagem de
-      //     sucesso pode ser mostrada
-      // - error: idem para mensagem de erro
-      res.render('listPeople', {
-        people: rows,
-        success: req.flash('success'),
-        error: req.flash('error')
-      });
-  });
-});
+
+    // renderiza a view de listagem de pessoas, passando como contexto
+    // de dados:
+    // - people: com um array de `person`s do banco de dados
+    // - success: com uma mensagem de sucesso, caso ela exista
+    //   - por exemplo, assim que uma pessoa é excluída, uma mensagem de
+    //     sucesso pode ser mostrada
+    // - error: idem para mensagem de erro
+    res.render('list-people', {
+      people,
+      success: req.flash('success'),
+      error: req.flash('error')
+    })
+
+  } catch (error) {
+    console.error(error)
+    error.friendlyMessage = 'Problema ao recuperar pessoas'
+    next(error)
+  }
+})
 
 
 /* PUT altera pessoa para morta por um certo zumbi */
-router.put('/eaten/', (req, res) => {
-  db.query('UPDATE person ' +
-           'SET alive = false, eatenBy = ' + db.escape(req.body.zombie) + ' ' +
-           'WHERE id = ' + db.escape(req.body.person),
-    (err, result) => {
-      if (err) {
-        req.flash('error', 'Erro desconhecido. Descrição: ' + err);
-      } else if (result.affectedRows !== 1) {
-        req.flash('error', 'Nao ha pessoa para ser comida');
-      } else {
-        req.flash('success', 'A pessoa foi inteiramente (nao apenas cerebro) engolida.');
-      }
-      res.redirect('/');
-  });
-});
+router.put('/eaten/', async (req, res, next) => {
+  const zombieId = req.body.zombie
+  const personId = req.body.person
+
+  if (!zombieId || !personId) {
+    req.flash('error', 'Nenhum id de pessoa ou zumbi foi passado!')
+    res.redirect('/')
+    return;
+  }
+
+  try {
+    const [result] = await db.execute(`UPDATE person 
+                                       SET alive=false, eatenBy=?
+                                       WHERE id=?`,
+                                      [zombieId, personId])
+    if (result.affectedRows !== 1) {
+      req.flash('error', 'Não há pessoa para ser comida.')
+    } else {
+      req.flash('success', 'A pessoa foi inteiramente (não apenas cérebro) engolida.')
+    }
+    
+  } catch (error) {
+    req.flash('error', `Erro desconhecido. Descrição: ${error}`)
+
+  } finally {
+    res.redirect('/')
+  }
+
+})
 
 
 /* GET formulario de registro de nova pessoa */
 router.get('/new/', (req, res) => {
-  res.render('newPerson');
-});
+  res.render('new-person', {
+    success: req.flash('success'),
+    error: req.flash('error')
+  })
+})
 
 
 /* POST registra uma nova pessoa */
-router.post('/', (req, res) => {
-  const name = req.body.name;
-  db.query('INSERT INTO person (`name`)' +
-           'VALUES (\'' + name + '\');',
-    (err, result) => {
-      if (err || typeof result.insertId === 'undefined') {
-        req.flash('error', 'Não foi possível registrar nova pessoa.');
-        res.redirect('back');
-        return;
-      }
-
-      req.flash('success', 'Pessoa registrada! (id=' + result.insertId + ')');
-      res.redirect('/people/');
-    });
-});
+router.post('/', async (req, res) => {
+  const name = req.body.name
+  try {
+    const [result] = await db.execute(`INSERT INTO person (name)
+                                       VALUES (?)`,
+                                      [name])
+    console.log(result)
+    if (!result.insertId) {
+      throw new Error()
+    }
+    
+    req.flash('success', `Pessoa registrada! (com id=${result.insertId})`)
+    res.redirect('/people/')
+    
+  } catch (error) {
+    console.log('error', error)
+    error.friendlyMessage = 'Não foi possível registrar nova pessoa'
+    req.flash('error', error.friendlyMessage)
+    res.redirect('back')
+  
+  }
+})
 
 /* DELETE uma pessoa */
-router.delete('/:id', (req, res) => {
-  db.query('DELETE FROM person WHERE id = ' + db.escape(req.params.id),
-    (err, result) => {
-      if (err) {
-        req.flash('error', 'Não foi possível excluir a pessoa.');
-      } else {
-        req.flash('success', 'Pessoa excluída.');
-      }
-      res.redirect('/people/');
-    });
-});
+router.delete('/:id', async (req, res) => {
+  const personId = req.params.id
+  if (!personId) {
+    req.flash('error', 'Nenhum id de pessoa foi passado!')
+    res.redirect('back')
+    return;
+  }
+
+  try {
+    const [result] = await db.execute('DELETE FROM person WHERE id=?',
+                                      [personId])
+
+    if (!result.affectedRows || result.affectedRows === 0) {
+      throw new Error()
+    }
+
+    req.flash('success', 'Pessoa excluída.')
+
+  } catch (error) {
+    console.error(error)
+    req.flash('error', 'Não foi possível excluir a pessoa.')
+
+  } finally {
+    res.redirect('/people/')
+
+  }
+})
 
 
-module.exports = router;
+export default router
