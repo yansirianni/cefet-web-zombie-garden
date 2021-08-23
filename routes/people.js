@@ -88,6 +88,34 @@ router.get('/new/', (req, res) => {
 //   2. Redirecionar para a rota de listagem de pessoas
 //      - Em caso de sucesso do INSERT, colocar uma mensagem feliz
 //      - Em caso de erro do INSERT, colocar mensagem vermelhinha
+router.post('/', async (req, res) => {
+  const personName = req.body.name
+
+  if(!personName){
+    req.flash('error', 'Nenhum nome de pessoa foi passado!')
+    res.redirect('/')
+    return;
+  }
+
+  try {
+
+    const [insertResult] = await db.execute(`INSERT INTO person (id, name, alive, eatenBy)
+    VALUES (NULL, ?, 1, NULL)`, [personName])
+
+    if (!insertResult || insertResult.affectedRows < 1) {
+      req.flash('error', 'Pessoa não pode ser adicionada.')
+    } else {
+      req.flash('success', 'Uma nova pessoa foi adicionada ao Jardim Zumbi.')
+    }
+    
+  } catch (error) {
+    req.flash('error', `Erro desconhecido. Descrição: ${error}`)
+
+  } finally {
+    res.redirect('/people')
+  }
+
+})
 
 
 /* DELETE uma pessoa */
